@@ -16,15 +16,15 @@ class GenericRepository:
         projection: dict = None,
         limit: int = 0
     ) -> pd.DataFrame:
-        """
-        Lee documentos desde una colección MongoDB y devuelve un DataFrame.
-        """
         try:
-            self.logger.info(f"🔍 Leyendo colección '{collection_name}'...")
+            separator = "=" * 70
+            self.logger.info(separator)
+            self.logger.info("Mongo ETL - Leyendo datos desde MongoDB")
+            self.logger.info(f"Leyendo colección '{collection_name}'...")
             collection = self.mongo_client.get_collection(collection_name)
             
             if collection is None:
-                self.logger.error(f"❌ No se pudo acceder a la colección '{collection_name}'.")
+                self.logger.error(f"No se pudo acceder a la colección '{collection_name}'.")
                 return pd.DataFrame()
 
             cursor = collection.find(query or {}, projection or {})
@@ -36,18 +36,17 @@ class GenericRepository:
             documents = list(cursor)
 
             if not documents:
-                self.logger.warning(f"⚠️ No se encontraron documentos en '{collection_name}'.")
+                self.logger.warning(f"No se encontraron documentos en '{collection_name}'.")
                 return pd.DataFrame()
 
-            # Normalizar _id a string
             for doc in documents:
                 if "_id" in doc and isinstance(doc["_id"], ObjectId):
                     doc["_id"] = str(doc["_id"])
 
             df = pd.DataFrame(documents)
-            self.logger.success(f"✅ Extraídos {len(df)} documentos desde '{collection_name}'.")
+            self.logger.success(f"Extraídos {len(df)} documentos desde '{collection_name}'.")
             return df
 
         except Exception as e:
-            self.logger.exception(f"💥 Error al leer la colección '{collection_name}': {e}")
+            self.logger.exception(f"Error al leer la colección '{collection_name}': {e}")
             return pd.DataFrame()
